@@ -38,6 +38,7 @@ module.exports = {
         quoteProps: 'as-needed',
       },
     ],
-    'import/no-unresolved': 'off', // checked by ts
+    'import/no-unresolved': 'off', // checked by ts,
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };
