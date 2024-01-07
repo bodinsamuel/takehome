@@ -1,14 +1,18 @@
 import crypto from 'node:crypto';
-import { privateKey } from './key.js';
+import { aesKey, privateKey, publicKey } from './key.js';
 
+// We use AES with an IV because it's faster and more appropriate for bulk encryption (in the scenario of the endpoint being intensively used)
 const ALGO = 'aes-256-cbc';
 const IV_LENGTH = 16; // For AES, this is always 16
+
+// Sign
+const ALGO_SIGN = 'SHA256';
 
 export function encryptJsonFields(
   body: Record<string, any>
 ): Record<string, string> {
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv(ALGO, privateKey!, iv);
+  const cipher = crypto.createCipheriv(ALGO, aesKey!, iv);
   const ivStr = iv.toString('hex');
 
   const encrypted: Record<string, string> = {};
@@ -26,26 +30,28 @@ export function encryptJsonFields(
 }
 
 export function decryptJsonFields(
-  body: Record<string, any>
+  body: Record<string, any>,
+  allowPartial: boolean
 ): Record<string, string> {
   const decrypted: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(body)) {
     // Because we couldn't one IV we need to repeat this operation per field
     // Clearly not efficient but good enough for small payload
+    // If an unencrypted message contains ":" it will create a false positive
     const [iv, msg] = value.split(':');
-    if (!iv || !msg) {
+    if (!allowPartial && (!iv || !msg)) {
       throw new Error('invalid_iv');
+    }
+    if (!msg) {
+      decrypted[key] = iv;
+      continue;
     }
 
     const ivBuffer = Buffer.from(iv, 'hex');
     const encryptedBuffer = Buffer.from(msg, 'hex');
 
-    const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
-      privateKey!,
-      ivBuffer
-    );
+    const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey!, ivBuffer);
 
     let next = decipher.update(encryptedBuffer);
     next = Buffer.concat([next, decipher.final()]);
@@ -54,4 +60,19 @@ export function decryptJsonFields(
   }
 
   return decrypted;
+}
+
+export function sign(data: Record<string, any>): string {
+  return crypto
+    .sign(ALGO_SIGN, Buffer.from(JSON.stringify(data)), privateKey!)
+    .toString('base64');
+}
+
+export function verify(data: Record<string, any>, signature: string): boolean {
+  return crypto.verify(
+    ALGO_SIGN,
+    Buffer.from(JSON.stringify(data)),
+    privateKey!,
+    Buffer.from(signature, 'base64')
+  );
 }

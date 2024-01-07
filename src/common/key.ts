@@ -3,19 +3,25 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 
-const KEY_PATH = 'private-key';
-
 // ESM do not have __dirname
 const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(path.join(filename, '..'));
-const fp = path.join(dirname, KEY_PATH);
+const dirname = path.dirname(path.join(filename, '..', '..'));
 
-export let privateKey: Buffer | undefined;
+// Key for signing
+const PRIVATE_KEY_PATH = path.join(dirname, 'private-key.pem');
+// Key for encryption
+const AES_KEY_PATH = path.join(dirname, 'private-key');
 
-export async function read(): Promise<Buffer | undefined> {
+export let privateKey: string | undefined;
+export let aesKey: Buffer | undefined;
+
+export async function read(): Promise<
+  { aes: Buffer; rsa: string } | undefined
+> {
   try {
-    const content = await fs.readFile(fp);
-    return content;
+    const contentAes = await fs.readFile(AES_KEY_PATH);
+    const contentRsa = await fs.readFile(PRIVATE_KEY_PATH);
+    return { aes: contentAes, rsa: contentRsa.toString() };
   } catch (err) {
     console.warn('Cant read private key');
     if (!(err instanceof Error) || (err as any).code !== 'ENOENT') {
@@ -24,18 +30,25 @@ export async function read(): Promise<Buffer | undefined> {
   }
 }
 
-export async function generate(): Promise<Buffer> {
+export async function generate(): Promise<{ aes: Buffer; rsa: string }> {
   console.warn('Generating key');
   const key = crypto.randomBytes(32);
 
+  const rsa = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'pkcs1', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs1', format: 'pem' },
+  });
+
   try {
-    await fs.writeFile(fp, key);
+    await fs.writeFile(AES_KEY_PATH, key);
+    await fs.writeFile(PRIVATE_KEY_PATH, rsa.privateKey);
   } catch (err) {
     console.error('Cant write private key', err);
     process.exit();
   }
 
-  return key;
+  return { aes: key, rsa: rsa.privateKey };
 }
 
 export async function readOrGenerate(): Promise<void> {
@@ -46,7 +59,8 @@ export async function readOrGenerate(): Promise<void> {
     key = await generate();
   }
 
-  privateKey = key;
+  aesKey = key.aes;
+  privateKey = key.rsa;
 
   console.log('✅ Key bootstrap');
 }

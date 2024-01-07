@@ -1,9 +1,9 @@
 import { FastifyPluginCallback } from 'fastify';
-import { decryptJsonFields } from '../common/crypto.js';
-import { serverError, validationError } from '../common/errors.js';
+import { validationError } from '../common/errors.js';
+import { decryptJsonFields, sign } from '../common/crypto.js';
 
 const fn: FastifyPluginCallback = (fastify, _, done) => {
-  fastify.post('/decrypt', function (req, res) {
+  fastify.post('/sign', function (req, res) {
     const body = req.body as Record<string, any>;
 
     // Better safe than sorry, otherwise Zod could be handy here
@@ -16,17 +16,12 @@ const fn: FastifyPluginCallback = (fastify, _, done) => {
       return validationError(res, 'Empty JSON');
     }
 
-    try {
-      const decrypted = decryptJsonFields(body, false);
-
-      return res.status(200).send(decrypted);
-    } catch (err) {
-      if (err instanceof Error && err.message === 'invalid_iv') {
-        return validationError(res, 'Please provide an encrypted JSON');
-      }
-
-      return serverError(res);
-    }
+    // We assume the JSON or part of the JSON has been encrypted
+    const decrypted = decryptJsonFields(body, true);
+    res.status(200).send({
+      signature: sign(decrypted),
+      data: body,
+    });
   });
 
   done();
