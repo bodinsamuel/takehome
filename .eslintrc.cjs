@@ -42,5 +42,6 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     'require-extensions/require-extensions': 'error',
     'require-extensions/require-index': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };

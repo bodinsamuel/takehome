@@ -4,19 +4,18 @@ import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 
 const KEY_PATH = 'private-key';
-const ALGO = 'aes-256-cbc';
 
 // ESM do not have __dirname
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(path.join(filename, '..'));
 const fp = path.join(dirname, KEY_PATH);
 
-export let privateKey: string | undefined;
+export let privateKey: Buffer | undefined;
 
-export async function read(): Promise<string | undefined> {
+export async function read(): Promise<Buffer | undefined> {
   try {
     const content = await fs.readFile(fp);
-    return content.toString();
+    return content;
   } catch (err) {
     console.warn('Cant read private key');
     if (!(err instanceof Error) || (err as any).code !== 'ENOENT') {
@@ -25,7 +24,7 @@ export async function read(): Promise<string | undefined> {
   }
 }
 
-export async function generate(): Promise<string> {
+export async function generate(): Promise<Buffer> {
   console.warn('Generating key');
   const key = crypto.randomBytes(32);
 
@@ -36,7 +35,7 @@ export async function generate(): Promise<string> {
     process.exit();
   }
 
-  return key.toString();
+  return key;
 }
 
 export async function readOrGenerate(): Promise<void> {

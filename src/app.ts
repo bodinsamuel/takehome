@@ -1,6 +1,6 @@
 import rawBody from 'fastify-raw-body';
 
-import { notFound, serverError } from './common/errors.js';
+import { notFound, serverError, validationError } from './common/errors.js';
 import { routes } from './routes/index.js';
 
 import type {
@@ -24,6 +24,12 @@ export default async (f: FastifyInstance, opts: FastifyPluginOptions) => {
 
   // Handle unexpected error as server error
   f.setErrorHandler(function (error, _req, res) {
+    // Catch json parsing error
+    if ((error as any).statusCode === 400) {
+      return validationError(res, 'Please provide a valid payload');
+    }
+
+    // any other error are 500
     console.error(error instanceof Error ? error.message : error);
     return serverError(res);
   });
@@ -52,6 +58,7 @@ export default async (f: FastifyInstance, opts: FastifyPluginOptions) => {
         const json = JSON.parse(body as string);
         done(null, json);
       } catch (err: unknown) {
+        // Due to fastify limitation we can't answer directly here
         (err as any).statusCode = 400;
         done(err as any, undefined);
       }

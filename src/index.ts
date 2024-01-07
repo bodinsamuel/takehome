@@ -1,6 +1,6 @@
 import fastify from 'fastify';
 import app from './app.js';
-import { readOrGenerate } from './key.js';
+import { readOrGenerate } from './common/key.js';
 
 const server = fastify();
 

@@ -21,3 +21,16 @@ export async function serverError(res: FastifyReply): Promise<void> {
   };
   return res.status(500).send(err);
 }
+
+export async function validationError(
+  res: FastifyReply,
+  message: string
+): Promise<void> {
+  const err = {
+    error: {
+      code: '400_invalid_request',
+      reason: message,
+    },
+  };
+  return res.status(400).send(err);
+}
