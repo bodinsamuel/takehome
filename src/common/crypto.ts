@@ -29,10 +29,15 @@ export function decryptJsonFields(
   body: Record<string, any>
 ): Record<string, string> {
   const decrypted: Record<string, string> = {};
+
   for (const [key, value] of Object.entries(body)) {
     // Because we couldn't one IV we need to repeat this operation per field
     // Clearly not efficient but good enough for small payload
     const [iv, msg] = value.split(':');
+    if (!iv || !msg) {
+      throw new Error('invalid_iv');
+    }
+
     const ivBuffer = Buffer.from(iv, 'hex');
     const encryptedBuffer = Buffer.from(msg, 'hex');
 
