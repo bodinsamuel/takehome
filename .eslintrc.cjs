@@ -38,5 +38,6 @@ module.exports = {
         quoteProps: 'as-needed',
       },
     ],
+    'import/no-unresolved': 'off', // checked by ts
   },
 };
