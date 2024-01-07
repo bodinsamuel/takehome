@@ -1,6 +1,6 @@
-# Riot takehome
+# Take home
 
-See [spec.md] for take home specification.
+See [spec](./spec.md) for take home specification.
 
 ## Technical Choices
 
@@ -93,7 +93,7 @@ curl --request POST \
 }'
 ```
 
-### POST /encrypt
+### POST /verify
 
 ```sh
 curl --request POST \

@@ -1,4 +1,4 @@
-# Riot Takehome Task Specification
+# Takehome Task Specification
 
 Your task is to implement a REST API which:
 
