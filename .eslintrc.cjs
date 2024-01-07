@@ -40,5 +40,7 @@ module.exports = {
     ],
     'import/no-unresolved': 'off', // checked by ts,
     '@typescript-eslint/no-explicit-any': 'off',
+    'require-extensions/require-extensions': 'error',
+    'require-extensions/require-index': 'off',
   },
 };
