@@ -60,3 +60,4 @@ profile*
 build/
 
 private-key
+private-key.pem

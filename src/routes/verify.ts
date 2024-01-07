@@ -10,7 +10,7 @@ const fn: FastifyPluginCallback = (fastify, _, done) => {
     if (!body || typeof body !== 'object') {
       return validationError(res, 'Provide a valid JSON');
     }
-    // we would be better off using Zod
+    // At this point we would be better off using Zod
     if (
       !('signature' in body) ||
       !('data' in body) ||

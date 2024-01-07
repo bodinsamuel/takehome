@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { aesKey, privateKey, publicKey } from './key.js';
+import { aesKey, privateKey } from './key.js';
 
 // We use AES with an IV because it's faster and more appropriate for bulk encryption (in the scenario of the endpoint being intensively used)
 const ALGO = 'aes-256-cbc';
